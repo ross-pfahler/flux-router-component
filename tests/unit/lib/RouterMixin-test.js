@@ -257,6 +257,40 @@ describe ('RouterMixin', function () {
             expect(testResult.pushState).to.eql({state: {params: {}}, title: null, url: '/bar'});
             expect(testResult.scrollTo).to.equal(undefined);
         });
+        it ('update with different route, navigate.type=default, override enableScroll, should not reset scroll position', function () {
+            var oldRoute = {url: '/foo'},
+                newRoute = {url: '/bar', navigate: {enableScroll: false}};
+            routerMixin.props = {
+                context: contextMock,
+                enableScroll: true,
+                historyCreator: function() {
+                    return historyMock('/foo', {scroll: {x: 12, y: 200}});
+                }
+            };
+
+            routerMixin.state = {route: newRoute};
+            routerMixin.componentDidMount();
+            routerMixin.componentDidUpdate({}, {route: oldRoute});
+            expect(testResult.pushState).to.eql({state: {params: {}}, title: null, url: '/bar'});
+            expect(testResult.scrollTo).to.eql(undefined);
+        });
+        it ('update with different route, navigate.type=default, override enableScroll, should reset scroll position', function () {
+            var oldRoute = {url: '/foo'},
+                newRoute = {url: '/bar', navigate: {enableScroll: true}};
+            routerMixin.props = {
+                context: contextMock,
+                enableScroll: false,
+                historyCreator: function() {
+                    return historyMock('/foo', {scroll: {x: 12, y: 200}});
+                }
+            };
+
+            routerMixin.state = {route: newRoute};
+            routerMixin.componentDidMount();
+            routerMixin.componentDidUpdate({}, {route: oldRoute});
+            expect(testResult.pushState).to.eql({state: {params: {}, scroll: {x: 0, y: 0}}, title: null, url: '/bar'});
+            expect(testResult.scrollTo).to.eql({x: 0, y: 0});
+        });
         it ('do not pushState, navigate.type=popstate, restore scroll position', function () {
             var oldRoute = {url: '/foo'},
                 newRoute = {url: '/bar', navigate: {type: 'popstate'}};
